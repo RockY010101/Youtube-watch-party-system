@@ -13,6 +13,7 @@ import { createServer } from 'http';        // Node built-in HTTP module
 import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
 import { getDb } from './db.js';            // async WASM-based SQLite init
+import { registerHandlers } from './MessageHandler.js'; // Block 4 — all socket events
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
@@ -49,11 +50,9 @@ const io = new SocketIOServer(httpServer, {
 // Every time a client calls socket.connect(), this fires.
 // Block 4 (MessageHandler) will register all game events here.
 io.on('connection', (socket) => {
-  console.log(`[socket] client connected:    ${socket.id}`);
-
-  socket.on('disconnect', (reason) => {
-    console.log(`[socket] client disconnected: ${socket.id} — ${reason}`);
-  });
+  console.log(`[socket] client connected: ${socket.id}`);
+  // Register all game/room event handlers for this socket (Block 4)
+  registerHandlers(socket);
 });
 
 // ─── REST Routes ─────────────────────────────────────────────────────────────
