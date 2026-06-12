@@ -134,3 +134,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# SQLite database (auto-generated at runtime, never commit)
+data/
+
+# Environment files — copy .env.example to .env and fill in values
+.env
