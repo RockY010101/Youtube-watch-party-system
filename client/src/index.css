@@ -1,0 +1,131 @@
+/* index.css — Global design system
+ *
+ * All CSS custom properties (variables) are defined here on :root so every
+ * component can reference them.  This is the single source of truth for
+ * colours, spacing, typography, and shadows.
+ */
+
+/* ── Google Font ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── CSS Variables ───────────────────────────────────────────────────────── */
+:root {
+  /* Colors */
+  --bg-base:       #0f0f13;   /* page background — near-black */
+  --bg-surface:    #1a1a24;   /* cards / panels */
+  --bg-elevated:   #23232f;   /* inputs, secondary surfaces */
+  --bg-hover:      #2a2a38;
+
+  --accent:        #7c6af5;   /* primary purple */
+  --accent-hover:  #9585f8;
+  --accent-dim:    rgba(124, 106, 245, 0.15);
+
+  --red:           #f56a6a;   /* destructive actions */
+  --green:         #6af5a0;   /* success states */
+
+  --text-primary:  #f0f0f8;
+  --text-secondary:#9898b0;
+  --text-muted:    #5a5a72;
+
+  --border:        rgba(255, 255, 255, 0.07);
+  --border-accent: rgba(124, 106, 245, 0.4);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Radius */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-accent: 0 4px 24px rgba(124, 106, 245, 0.25);
+
+  /* Transitions */
+  --transition: 180ms ease;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Typography helpers ──────────────────────────────────────────────────── */
+h1, h2, h3 { line-height: 1.2; font-weight: 700; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.1rem; }
+
+p { color: var(--text-secondary); }
+
+/* ── Button base ─────────────────────────────────────────────────────────── */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background var(--transition), transform var(--transition), opacity var(--transition);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Input base ──────────────────────────────────────────────────────────── */
+input, textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  width: 100%;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--bg-hover); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
