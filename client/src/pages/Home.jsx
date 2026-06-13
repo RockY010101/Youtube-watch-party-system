@@ -30,8 +30,6 @@ export default function Home() {
   const [joinErr,    setJoinErr]      = useState('');
 
   // ── handleCreate ──────────────────────────────────────────────────────────
-  // Called when the Create Room form is submitted.
-  // Hits POST /api/room, gets back { code, userId }, then navigates.
   async function handleCreate(e) {
     e.preventDefault();
     setCreateErr('');
@@ -48,7 +46,6 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create room.');
 
-      // Navigate to /room/:code and pass identity via location.state
       navigate(`/room/${data.code}`, {
         state: { userId: data.userId, displayName: name },
       });
@@ -60,8 +57,6 @@ export default function Home() {
   }
 
   // ── handleJoin ────────────────────────────────────────────────────────────
-  // Called when the Join Room form is submitted.
-  // Hits GET /api/room/:code first to validate, then navigates.
   async function handleJoin(e) {
     e.preventDefault();
     setJoinErr('');
@@ -76,7 +71,6 @@ export default function Home() {
       const data = await res.json();
       if (!data.exists) throw new Error(`Room "${code}" not found.`);
 
-      // Generate a userId client-side for joiners (host userId comes from server)
       const userId = uuidv4();
       navigate(`/room/${code}`, {
         state: { userId, displayName: name },
@@ -91,32 +85,65 @@ export default function Home() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="home-page">
-      {/* Hero */}
+
+      {/* ── Navbar ─────────────────────────────────────────────────────── */}
+      <nav className="home-navbar">
+        <div className="navbar-brand">
+          <div className="navbar-logo-icon" />
+          <div>
+            <span className="navbar-brand-name">YouTube Watch Party</span>
+            <span className="navbar-brand-sub">Watch YouTube videos together in real time.</span>
+          </div>
+        </div>
+
+        <div className="navbar-links">
+          <span className="navbar-link active">Home</span>
+          <span className="navbar-link">Features</span>
+          <span className="navbar-link">How it Works</span>
+        </div>
+
+        <div className="navbar-actions">
+          <div className="navbar-icon-btn" title="Notifications">🔔</div>
+          <div className="navbar-icon-btn" title="Settings">⚙️</div>
+          <div className="navbar-avatar">Y</div>
+        </div>
+      </nav>
+
+      {/* ── Hero ───────────────────────────────────────────────────────── */}
       <div className="home-hero">
-        <div className="hero-badge">🎬 Real-time sync</div>
-        <h1 className="hero-title">Watch YouTube<br /><span className="gradient-text">Together</span></h1>
-        <p className="hero-sub">Create a room, share the code, and enjoy perfectly synced playback with anyone on the planet.</p>
+        <h1 className="hero-title">
+          Watch Together. <span className="gradient-text">Stay In Sync.</span>
+        </h1>
+        <p className="hero-sub">
+          Experience YouTube like never before. Create private rooms, invite
+          your friends, and watch your favorite creators in perfect real-time
+          synchronization.
+        </p>
       </div>
 
-      {/* Cards */}
+      {/* ── Cards ──────────────────────────────────────────────────────── */}
       <div className="home-cards">
 
         {/* Create Room card */}
         <div className="card">
-          <div className="card-icon">✨</div>
-          <h2 className="card-title">Create a Room</h2>
-          <p className="card-desc">Start a new watch party and invite friends with a 6-character code.</p>
+          <div className="card-header">
+            <div className="card-header-icon">⊕</div>
+            <h2 className="card-title">Start a Party</h2>
+          </div>
           <form onSubmit={handleCreate} className="card-form">
-            <input
-              id="create-name"
-              className="input"
-              type="text"
-              placeholder="Your display name"
-              value={createName}
-              onChange={e => setCreateName(e.target.value)}
-              maxLength={30}
-              autoComplete="off"
-            />
+            <div>
+              <label className="form-label" htmlFor="create-name">Display Name</label>
+              <input
+                id="create-name"
+                className="input"
+                type="text"
+                placeholder="Enter your name"
+                value={createName}
+                onChange={e => setCreateName(e.target.value)}
+                maxLength={30}
+                autoComplete="off"
+              />
+            </div>
             {createErr && <p className="form-error">{createErr}</p>}
             <button id="create-room-btn" className="btn btn-primary" type="submit" disabled={creating}>
               {creating ? 'Creating…' : 'Create Room'}
@@ -124,42 +151,54 @@ export default function Home() {
           </form>
         </div>
 
-        {/* Divider */}
-        <div className="home-divider"><span>or</span></div>
-
         {/* Join Room card */}
         <div className="card">
-          <div className="card-icon">🔗</div>
-          <h2 className="card-title">Join a Room</h2>
-          <p className="card-desc">Got a code from a friend? Enter it below to jump right in.</p>
+          <div className="card-header">
+            <div className="card-header-icon">👥</div>
+            <h2 className="card-title">Join a Friend</h2>
+          </div>
           <form onSubmit={handleJoin} className="card-form">
-            <input
-              id="join-code"
-              className="input input-mono"
-              type="text"
-              placeholder="Room code (e.g. A3B9QZ)"
-              value={joinCode}
-              onChange={e => setJoinCode(e.target.value.toUpperCase())}
-              maxLength={6}
-              autoComplete="off"
-            />
-            <input
-              id="join-name"
-              className="input"
-              type="text"
-              placeholder="Your display name"
-              value={joinName}
-              onChange={e => setJoinName(e.target.value)}
-              maxLength={30}
-              autoComplete="off"
-            />
+            <div>
+              <label className="form-label" htmlFor="join-code">Room Code</label>
+              <input
+                id="join-code"
+                className="input input-mono"
+                type="text"
+                placeholder="X7Y-282"
+                value={joinCode}
+                onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                maxLength={6}
+                autoComplete="off"
+              />
+            </div>
+            <div>
+              <label className="form-label" htmlFor="join-name">Display Name</label>
+              <input
+                id="join-name"
+                className="input"
+                type="text"
+                placeholder="Enter your name"
+                value={joinName}
+                onChange={e => setJoinName(e.target.value)}
+                maxLength={30}
+                autoComplete="off"
+              />
+            </div>
             {joinErr && <p className="form-error">{joinErr}</p>}
             <button id="join-room-btn" className="btn btn-secondary" type="submit" disabled={joining}>
               {joining ? 'Joining…' : 'Join Room'}
             </button>
           </form>
         </div>
+
       </div>
+
+      {/* ── Features footer ────────────────────────────────────────────── */}
+      <div className="home-features">
+        <h2 className="home-features-title">Ultimate Viewing Tools</h2>
+        <p className="home-features-sub">Engineered for low-latency interactions and seamless entertainment.</p>
+      </div>
+
     </div>
   );
 }
