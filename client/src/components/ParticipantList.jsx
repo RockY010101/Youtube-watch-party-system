@@ -20,13 +20,11 @@ export default function ParticipantList({
   onRemoveParticipant,
 }) {
 
-  // ── roleBadge ───────────────────────────────────────────────────────────
-  // Returns a styled badge element for a given role string
   function roleBadge(role) {
     const labels = {
-      host:        '👑 Host',
-      moderator:   '🛡 Mod',
-      participant: '👁 Viewer',
+      host:        'Host',
+      moderator:   'Moderator',
+      participant: 'Participant',
     };
     return (
       <span className={`role-badge role-badge-${role}`}>
@@ -35,32 +33,21 @@ export default function ParticipantList({
     );
   }
 
-  // ── handleRoleChange ────────────────────────────────────────────────────
-  // Called when the host selects a new role from the dropdown
   function handleRoleChange(targetUserId, newRole) {
     onAssignRole(targetUserId, newRole);
   }
 
-  // ── handleRemove ────────────────────────────────────────────────────────
-  // Called when the host clicks the remove button
-  // Simple confirmation dialog before kicking someone
   function handleRemove(targetUserId, displayName) {
     const confirmed = window.confirm(`Remove "${displayName}" from the room?`);
     if (confirmed) onRemoveParticipant(targetUserId);
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="participant-list">
+      
+      {/* Online count */}
+      <div className="members-online-count">Online — {participants.length}</div>
 
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="participant-list-header">
-        <span className="participant-list-icon">👥</span>
-        <span className="participant-list-title">Participants</span>
-        <span className="participant-count">{participants.length}</span>
-      </div>
-
-      {/* ── List ────────────────────────────────────────────────────── */}
       <ul className="participant-items">
         {participants.map((p) => {
           const isMe     = p.userId === myUserId;
@@ -83,11 +70,9 @@ export default function ParticipantList({
                 {roleBadge(p.role)}
               </div>
 
-              {/* Host controls — only shown to the host, only for other non-host participants */}
+              {/* Host controls */}
               {isHost && isTarget && (
                 <div className="participant-actions">
-
-                  {/* Role dropdown: promote to mod or demote to participant */}
                   <select
                     className="role-select"
                     value={p.role}
@@ -97,16 +82,13 @@ export default function ParticipantList({
                     <option value="moderator">Mod</option>
                     <option value="participant">Viewer</option>
                   </select>
-
-                  {/* Remove button */}
                   <button
-                    className="btn btn-remove"
+                    className="btn-remove"
                     onClick={() => handleRemove(p.userId, p.displayName)}
                     title={`Remove ${p.displayName}`}
                   >
                     ✕
                   </button>
-
                 </div>
               )}
 

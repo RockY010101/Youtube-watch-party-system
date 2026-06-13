@@ -18,28 +18,21 @@ import { useState, useEffect, useRef } from 'react';
 
 export default function Chat({ messages, myUserId, displayName, onSendMessage }) {
   const [input, setInput]     = useState('');
-  const bottomRef             = useRef(null); // ref to the bottom of the message list
+  const bottomRef             = useRef(null);
 
-  // Auto-scroll to bottom whenever a new message arrives
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ── handleSend ─────────────────────────────────────────────────────────
   function handleSend(e) {
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed) return;
 
     onSendMessage(trimmed);
-    setInput(''); // clear input after sending
-    // Note: we do NOT push to messages here — the server echoes it back
-    // via the chat_message event, which Room.jsx adds to the messages array.
-    // This ensures consistency (one source of truth = the server).
+    setInput('');
   }
 
-  // ── handleKeyDown ──────────────────────────────────────────────────────
-  // Send on Enter, allow Shift+Enter for newlines
   function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -47,8 +40,6 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage })
     }
   }
 
-  // ── formatTime ─────────────────────────────────────────────────────────
-  // Format a Unix timestamp as HH:MM
   function formatTime(timestamp) {
     return new Date(timestamp).toLocaleTimeString([], {
       hour:   '2-digit',
@@ -56,18 +47,8 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage })
     });
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="chat">
-
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="chat-header">
-        <span className="chat-header-icon">💬</span>
-        <span className="chat-header-title">Chat</span>
-        <span className="chat-message-count">{messages.length}</span>
-      </div>
-
-      {/* ── Message list ────────────────────────────────────────────── */}
       <div className="chat-messages">
         {messages.length === 0 && (
           <p className="chat-empty">No messages yet. Say hello! 👋</p>
@@ -80,23 +61,30 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage })
               key={index}
               className={`chat-message ${isMe ? 'chat-message-mine' : 'chat-message-theirs'}`}
             >
-              {/* Show sender name only for other people's messages */}
               {!isMe && (
-                <span className="chat-sender">{msg.displayName}</span>
+                <div className="chat-meta">
+                  <div className="chat-avatar-sm">{msg.displayName.charAt(0).toUpperCase()}</div>
+                  <span className="chat-sender">{msg.displayName}</span>
+                  <span className="chat-sender-time">{formatTime(msg.timestamp)}</span>
+                </div>
+              )}
+              {isMe && (
+                <div className="chat-mine-meta">
+                  <span className="chat-sender-time">{formatTime(msg.timestamp)}</span>
+                  <span className="chat-sender">{msg.displayName}</span>
+                  <div className="chat-avatar-sm">{msg.displayName.charAt(0).toUpperCase()}</div>
+                </div>
               )}
               <div className="chat-bubble">
                 <span className="chat-text">{msg.message}</span>
-                <span className="chat-time">{formatTime(msg.timestamp)}</span>
               </div>
             </div>
           );
         })}
 
-        {/* Invisible div at the bottom — scrolled into view on new messages */}
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Input area ──────────────────────────────────────────────── */}
       <form className="chat-input-form" onSubmit={handleSend}>
         <input
           className="chat-input"
@@ -109,7 +97,7 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage })
           autoComplete="off"
         />
         <button
-          className="btn btn-send"
+          className="btn-send"
           type="submit"
           disabled={!input.trim()}
         >
