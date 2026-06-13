@@ -26,13 +26,38 @@ export default function VideoControls({
   onPlay,
   onPause,
   onChangeVideo,
+  getPlayerTime,
 }) {
   const [urlInput, setUrlInput] = useState(videoUrl || '');
   const [urlError, setUrlError] = useState('');
+  const [progress, setProgress] = useState(0);
+  const [timeStr, setTimeStr] = useState('00:00');
 
   useEffect(() => {
     setUrlInput(videoUrl || '');
   }, [videoUrl]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (getPlayerTime) {
+        const { time, duration } = await getPlayerTime();
+        if (duration > 0) {
+          setProgress((time / duration) * 100);
+          
+          const format = (seconds) => {
+             const m = Math.floor(seconds / 60);
+             const s = Math.floor(seconds % 60);
+             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+          };
+          setTimeStr(format(time));
+        } else {
+          setProgress(0);
+          setTimeStr('00:00');
+        }
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [getPlayerTime]);
 
   function handleUrlSubmit(e) {
     e.preventDefault();
@@ -68,9 +93,9 @@ export default function VideoControls({
 
       {/* ── Progress row (visual only for now) ─────────────────────────── */}
       <div className="controls-progress-row">
-        <span className="controls-time">00:00</span>
+        <span className="controls-time">{timeStr}</span>
         <div className="controls-progress-bar">
-          <div className="controls-progress-fill" style={{ width: '45%' }} />
+          <div className="controls-progress-fill" style={{ width: `${progress}%` }} />
         </div>
         <span className="controls-live-badge">LIVE</span>
       </div>

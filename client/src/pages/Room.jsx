@@ -158,6 +158,13 @@ export default function Room() {
     emitPause(t);
   }, [emitPause]);
 
+  const getPlayerTime = useCallback(async () => {
+    if (!playerRef.current) return { time: 0, duration: 0 };
+    const t = await playerRef.current.getCurrentTime();
+    const d = await playerRef.current.getDuration();
+    return { time: t, duration: d };
+  }, []);
+
   const canControl = myRole === 'host' || myRole === 'moderator';
   const isHost     = myRole === 'host';
 
@@ -217,14 +224,6 @@ export default function Room() {
             <span className="left-room-code-value">{code}</span>
           </div>
 
-          <button
-            className="btn-share-link"
-            onClick={() => navigator.clipboard.writeText(code)}
-            title="Copy room code"
-          >
-            <span className="share-icon">🔗</span> Share Room Link
-          </button>
-
           <div className="left-participants-header">
             <span className="left-participants-icon">👥</span>
             <span className="left-participants-title">Participants</span>
@@ -280,6 +279,7 @@ export default function Room() {
             onPlay={handlePlay}
             onPause={handlePause}
             onChangeVideo={emitChangeVideo}
+            getPlayerTime={getPlayerTime}
           />
         </section>
 

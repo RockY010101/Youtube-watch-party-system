@@ -5,9 +5,13 @@ import { useRef, forwardRef, useImperativeHandle, useEffect, useState } from 're
 
 function extractVideoId(input) {
   if (!input) return '';
-  if (/^[a-zA-Z0-9_-]{11}$/.test(input.trim())) return input.trim();
+  let str = input.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+  if (!str.startsWith('http')) {
+    str = 'https://' + str;
+  }
   try {
-    const url = new URL(input);
+    const url = new URL(str);
     if (url.searchParams.get('v')) return url.searchParams.get('v');
     if (url.hostname === 'youtu.be') return url.pathname.slice(1).split('?')[0];
     if (url.pathname.startsWith('/embed/')) return url.pathname.split('/')[2];
@@ -113,6 +117,12 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
       const p = playerRef.current;
       if (!p || typeof p.getCurrentTime !== 'function') return Promise.resolve(0);
       return Promise.resolve(p.getCurrentTime() || 0);
+    },
+
+    getDuration() {
+      const p = playerRef.current;
+      if (!p || typeof p.getDuration !== 'function') return Promise.resolve(0);
+      return Promise.resolve(p.getDuration() || 0);
     },
   }));
 
