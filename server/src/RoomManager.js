@@ -114,19 +114,15 @@ export async function joinRoom(code, userId, displayName, socketId) {
   // Step 1: Check SQLite to confirm this room was ever created.
   // This is the authoritative check — even if the server restarted and
   // lost the in-memory Map, SQLite still knows the room exists.
-  const result = db.exec(
-    'SELECT code FROM rooms WHERE code = ?',
-    [code]
-  );
+  const stmt = db.prepare('SELECT code FROM rooms WHERE code = ?');
+  stmt.bind([code]);
+  const roomExists = stmt.step();
+  stmt.free();
 
-  // db.exec returns an array of result sets.
-  // If the array is empty OR the first result set has no rows → room not found.
-  const roomExists = result.length > 0 && result[0].values.length > 0;
   if (!roomExists) {
     console.log(`[RoomManager] joinRoom failed — code not found: ${code}`);
     return null;
   }
-
   // Step 2: Get or lazily recreate the in-memory Room instance.
   // "Lazy recreation" handles the edge case where the server restarted:
   // SQLite says the room exists, but the Map is empty.
@@ -180,11 +176,11 @@ export function getRoom(code) {
 // Returns: true | false
 export async function roomExists(code) {
   const db = await getDb();
-  const result = db.exec(
-    'SELECT code FROM rooms WHERE code = ?',
-    [code]
-  );
-  return result.length > 0 && result[0].values.length > 0;
+  const stmt = db.prepare('SELECT code FROM rooms WHERE code = ?');
+  stmt.bind([code]);
+  const exists = stmt.step();
+  stmt.free();
+  return exists;
 }
 
 // ─── removeRoom(code) ────────────────────────────────────────────────────────
