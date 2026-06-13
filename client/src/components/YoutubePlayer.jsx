@@ -58,7 +58,7 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
     if (playerRef.current) return; // already initialized
 
     playerRef.current = new window.YT.Player('yt-player', {
-      height: '400',
+      height: '100%',
       width: '100%',
       playerVars: {
         controls: 1,
@@ -127,9 +127,9 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
   }));
 
   return (
-    <div style={{ width: '100%', background: '#000' }}>
+    <div style={{ width: '100%', aspectRatio: '16/9', background: '#000' }}>
       {!currentVideoId && (
-        <div className="player-placeholder">
+        <div className="player-placeholder" style={{ height: '100%' }}>
           <span className="placeholder-icon">▶</span>
           <p className="placeholder-text">
             {canControl
@@ -139,13 +139,14 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
         </div>
       )}
       <div
-        id="yt-player"
         style={{
           width: '100%',
-          height: '400px',
+          height: '100%',
           display: currentVideoId ? 'block' : 'none',
         }}
-      />
+      >
+        <div id="yt-player" />
+      </div>
     </div>
   );
 });
