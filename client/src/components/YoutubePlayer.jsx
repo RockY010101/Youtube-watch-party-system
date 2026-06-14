@@ -150,10 +150,24 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
           width: '100%',
           height: '100%',
           display: currentVideoId ? 'block' : 'none',
-          pointerEvents: canControl ? 'auto' : 'none',
+          position: 'relative',
         }}
       >
         <div id="yt-player" />
+        {!canControl && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              zIndex: 10,
+              background: 'transparent',
+            }}
+            title="Only the host can control playback"
+          />
+        )}
       </div>
     </div>
   );
