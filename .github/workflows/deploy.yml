@@ -6,26 +6,43 @@ on:
       - main
 
 jobs:
+  # ── Job 1: Deploy Frontend to Vercel ──────────────────────────────────────
   deploy-frontend:
     name: Deploy Frontend to Vercel
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Install client dependencies
+        run: npm install
+        working-directory: client
+
+      - name: Build client
+        run: npm run build
+        working-directory: client
+        env:
+          VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
+
       - name: Deploy to Vercel
-        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        working-directory: client
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        working-directory: client
 
+  # ── Job 2: Deploy Backend to Render ───────────────────────────────────────
   deploy-backend:
     name: Deploy Backend to Render
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Render Deploy
-        run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+      - name: Trigger Render Deploy Hook
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
