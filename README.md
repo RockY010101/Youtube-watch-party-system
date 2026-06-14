@@ -8,7 +8,7 @@
 
 ## 🌐 Live Demo
 
-> **Coming soon** — will be updated after deployment
+🔗 **[https://youtube-watch-party-system.vercel.app](https://youtube-watch-party-system.vercel.app)**
 
 ---
 
@@ -107,6 +107,9 @@ Permission checks happen **server-side** in `MessageHandler.js` before any state
 
 ```
 Youtube-watch-party-system/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml         ← GitHub Actions CI/CD pipeline
 ├── server/
 │   ├── src/
 │   │   ├── index.js          ← Express + Socket.IO entry point
@@ -130,20 +133,21 @@ Youtube-watch-party-system/
     │   │   └── Chat.jsx
     │   ├── socket.js         ← Socket.IO client singleton
     │   └── App.jsx           ← React Router setup
+    ├── vercel.json           ← Vercel rewrite rules for React Router
     ├── index.html
     └── package.json
 ```
 
 ---
 
-## 🔧 OOP Design (Bonus)
+## 🚀 CI/CD Pipeline
 
-The backend uses object-oriented principles:
+GitHub Actions automatically deploys on every push to `main`:
 
-- **`Participant`** — encapsulates user identity, role, and socket reference. Methods: `canControl()`, `canManage()`, `toJSON()`
-- **`Room`** — encapsulates room state, participant map, video state. Methods: `addParticipant()`, `removeParticipant()`, `getEffectiveCurrentTime()`, `broadcast()`, `toJSON()`
-- **`RoomManager`** — manages all active rooms in memory + SQLite persistence
-- **`MessageHandler`** — handles all Socket.IO events per socket with role enforcement
+```
+Frontend — Build Check  →  Deploy — Vercel
+Backend  — Test & Build →  Deploy — Render
+```
 
 ---
 
@@ -151,8 +155,8 @@ The backend uses object-oriented principles:
 
 | Service | Platform | URL |
 |---|---|---|
-| Backend | Render | `coming soon` |
-| Frontend | Vercel | `coming soon` |
+| Frontend | Vercel | [https://youtube-watch-party-system.vercel.app](https://youtube-watch-party-system.vercel.app) |
+| Backend | Render | https://youtube-watch-party-system-rv4e.onrender.com |
 
 ---
 
