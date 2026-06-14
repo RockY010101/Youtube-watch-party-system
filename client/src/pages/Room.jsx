@@ -207,9 +207,6 @@ export default function Room() {
           {/* Empty center in new design */}
         </div>
         <div className="room-header-right">
-          <div className="room-header-icon-btn" title="Notifications">🔔</div>
-          <div className="room-header-icon-btn" title="Settings">⚙️</div>
-          <div className="room-header-avatar">{displayName.charAt(0).toUpperCase()}</div>
         </div>
       </header>
 

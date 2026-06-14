@@ -80,13 +80,7 @@ export default function VideoControls({
     onChangeVideo(trimmed);
   }
 
-  function handlePlayPause() {
-    if (playing) {
-      onPause();
-    } else {
-      onPlay();
-    }
-  }
+
 
   return (
     <div className="video-controls">
@@ -103,23 +97,7 @@ export default function VideoControls({
       {/* ── Main controls row ──────────────────────────────────────────── */}
       <div className="controls-main-row">
         
-        {/* Playback icon buttons */}
-        <button className="ctrl-btn" disabled={!canControl} title="Previous">⏮</button>
-        <button
-          className="ctrl-btn ctrl-btn-play"
-          onClick={handlePlayPause}
-          disabled={!canControl || !videoUrl}
-          title={!canControl ? 'Only host/moderator can control playback' : (playing ? 'Pause' : 'Play')}
-        >
-          {playing ? '⏸' : '▶'}
-        </button>
-        <button className="ctrl-btn" disabled={!canControl} title="Next">⏭</button>
 
-        {/* Volume (visual only) */}
-        <div className="ctrl-volume-wrap">
-          <span className="ctrl-btn" style={{fontSize: '0.8rem'}}>🔊</span>
-          <input type="range" className="ctrl-volume-slider" disabled={!canControl} />
-        </div>
 
         {/* URL form */}
         <form className="url-form" onSubmit={handleUrlSubmit}>
