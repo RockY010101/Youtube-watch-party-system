@@ -61,10 +61,11 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
       height: '100%',
       width: '100%',
       playerVars: {
-        controls: 1,
+        controls: canControl ? 1 : 0,
         rel: 0,
         modestbranding: 1,
         enablejsapi: 1,
+        disablekb: canControl ? 0 : 1,
         origin: window.location.origin,
       },
       events: {
@@ -143,6 +144,7 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
           width: '100%',
           height: '100%',
           display: currentVideoId ? 'block' : 'none',
+          pointerEvents: canControl ? 'auto' : 'none',
         }}
       >
         <div id="yt-player" />
