@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import Navbar from '../components/Navbar.jsx';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
@@ -87,27 +88,7 @@ export default function Home() {
     <div className="home-page">
 
       {/* ── Navbar ─────────────────────────────────────────────────────── */}
-      <nav className="home-navbar">
-        <div className="navbar-brand">
-          <div className="navbar-logo-icon" />
-          <div>
-            <span className="navbar-brand-name">YouTube Watch Party</span>
-            <span className="navbar-brand-sub">Watch YouTube videos together in real time.</span>
-          </div>
-        </div>
-
-        <div className="navbar-links">
-          <span className="navbar-link active">Home</span>
-          <span className="navbar-link">Features</span>
-          <span className="navbar-link">How it Works</span>
-        </div>
-
-        <div className="navbar-actions">
-          <div className="navbar-icon-btn" title="Notifications">🔔</div>
-          <div className="navbar-icon-btn" title="Settings">⚙️</div>
-          <div className="navbar-avatar">Y</div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <div className="home-hero">

@@ -15,6 +15,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import Room from './pages/Room.jsx';
+import Features from './pages/Features.jsx';
+import HowItWorks from './pages/HowItWorks.jsx';
 
 export default function App() {
   return (
@@ -22,6 +24,12 @@ export default function App() {
       <Routes>
         {/* Home — create or join a room */}
         <Route path="/" element={<Home />} />
+
+        {/* Features page */}
+        <Route path="/features" element={<Features />} />
+
+        {/* How it Works page */}
+        <Route path="/how-it-works" element={<HowItWorks />} />
 
         {/* Room — the watch party UI, :code is the 6-char room code */}
         <Route path="/room/:code" element={<Room />} />
