@@ -116,6 +116,12 @@ export function registerHandlers(socket) {
     }
     if (requireControl && !participant.canControl()) {
       socket.emit('error', { message: 'Only the host or moderator can control playback.' });
+      socket.emit('sync_state', {
+        videoUrl:    room.videoUrl,
+        playing:     room.videoState.playing,
+        currentTime: room.getEffectiveCurrentTime(),
+        participants: Array.from(room.participants.values()).map(p => p.toJSON()),
+      });
       return null;
     }
 

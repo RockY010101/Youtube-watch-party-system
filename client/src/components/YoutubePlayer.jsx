@@ -2,6 +2,7 @@
 // Uses a simple iframe embed URL approach — most reliable method
 
 import { useRef, forwardRef, useImperativeHandle, useEffect, useState } from 'react';
+import socket from '../socket.js';
 
 function extractVideoId(input) {
   if (!input) return '';
@@ -72,7 +73,12 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
         onReady: () => console.log('[YT] Player ready'),
         onStateChange: (e) => {
           if (suppressEvents.current) return;
-          if (!canControlRef.current) return;  // BUG FIX: use ref, not stale closure
+          if (!canControlRef.current) {
+            // force re-sync to host timeline
+            suppressEvents.current = true;
+            socket.emit('request_sync');
+            return;
+          }
           const t = e.target.getCurrentTime();
           if (e.data === 1) onPlay(t);   // 1 = playing
           if (e.data === 2) onPause(t);  // 2 = paused
