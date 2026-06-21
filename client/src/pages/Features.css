@@ -1,0 +1,128 @@
+/* ── Elevated Features ────────────────────────────────────────────────── */
+.features-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 2rem 10rem;
+  display: flex;
+  flex-direction: column;
+  gap: 150px; /* Large gap for scroll effect */
+}
+
+.feature-block {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.feature-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 30px;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--accent-dim), transparent);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.feature-block.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.feature-block.is-visible::before {
+  opacity: 1;
+}
+
+.feature-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.feature-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: var(--accent);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+  position: relative;
+}
+
+.feature-icon-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--accent), transparent);
+  opacity: 0.1;
+  z-index: -1;
+}
+
+.feature-block.is-visible .feature-icon-wrapper {
+  animation: float-icon 4s ease-in-out infinite alternate;
+}
+
+.feature-block:hover .feature-icon-wrapper {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-dim);
+}
+
+@keyframes float-icon {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-6px); }
+}
+
+.feature-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.feature-description {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 750px;
+  padding-left: calc(64px + 1.5rem); /* Align with text, not icon */
+  font-weight: 400;
+}
+
+/* Add a subtle gradient text effect to the titles on hover */
+.feature-block:hover .feature-title {
+  background: linear-gradient(to right, #fff, #bbb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .feature-description {
+    padding-left: 0;
+    font-size: 1.15rem;
+  }
+  .feature-title {
+    font-size: 1.8rem;
+  }
+  .features-container {
+    gap: 100px;
+    padding-bottom: 6rem;
+  }
+  .feature-block::before {
+    display: none;
+  }
+}
