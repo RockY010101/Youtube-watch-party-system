@@ -15,10 +15,13 @@
 //   onSendMessage — function(message): emits chat_message to server
 
 import { useState, useEffect, useRef } from 'react';
+import './Chat.css';
 
 export default function Chat({ messages, myUserId, displayName, onSendMessage }) {
   const [input, setInput]     = useState('');
   const bottomRef             = useRef(null);
+
+  const reactions = ['😂', '😮', '🔥', '❤️', '👏', '💀'];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,6 +34,10 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage })
 
     onSendMessage(trimmed);
     setInput('');
+  }
+
+  function handleReaction(reaction) {
+    onSendMessage(reaction);
   }
 
   function handleKeyDown(e) {
@@ -83,6 +90,19 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage })
         })}
 
         <div ref={bottomRef} />
+      </div>
+
+      <div className="chat-reactions-bar">
+        {reactions.map((emoji) => (
+          <button
+            key={emoji}
+            className="chat-reaction-btn"
+            onClick={() => handleReaction(emoji)}
+            title={`React with ${emoji}`}
+          >
+            {emoji}
+          </button>
+        ))}
       </div>
 
       <form className="chat-input-form" onSubmit={handleSend}>
