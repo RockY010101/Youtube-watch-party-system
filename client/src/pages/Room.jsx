@@ -20,6 +20,7 @@ import VideoControls from '../components/VideoControls.jsx';
 import ParticipantList from '../components/ParticipantList.jsx';
 import Chat from '../components/Chat.jsx';
 import FloatingReactions from '../components/FloatingReactions.jsx';
+import ToastNotifications from '../components/ToastNotifications.jsx';
 
 export default function Room() {
   // ── Router hooks ────────────────────────────────────────────────────────
@@ -56,6 +57,21 @@ export default function Room() {
     });
   }, [code]);
 
+  // ── Toast notifications ───────────────────────────────────────────────────
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback((message, type = 'info', icon = '🔔', duration = 3800) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev, { id, message, type, icon, duration }]);
+  }, []);
+
+  const dismissToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // Track previous video URL so we can detect changes
+  const prevVideoUrlRef = useRef('');
+
   // ── Ref to the YouTube player's imperative API ───────────────────────────
   const playerRef = useRef(null);
 
@@ -81,6 +97,12 @@ export default function Room() {
     }
 
     function onSyncState({ videoUrl, currentTime, playing, participants: updatedParticipants }) {
+      // Fire a toast only when the video URL genuinely changes (not on the first sync)
+      if (videoUrl && prevVideoUrlRef.current && videoUrl !== prevVideoUrlRef.current) {
+        addToast('Video changed', 'video', '🎬');
+      }
+      if (videoUrl) prevVideoUrlRef.current = videoUrl;
+
       setVideoState({ videoUrl, currentTime, playing });
       if (updatedParticipants) setParticipants(updatedParticipants);
       if (playerRef.current) {
@@ -91,24 +113,47 @@ export default function Room() {
     function onUserJoined({ participant }) {
       setParticipants(prev => {
         const exists = prev.find(p => p.userId === participant.userId);
+        if (!exists) {
+          addToast(`${participant.displayName} joined`, 'join', '👋');
+        }
         return exists ? prev : [...prev, participant];
       });
     }
 
     function onUserLeft({ userId: leftId }) {
-      setParticipants(prev => prev.filter(p => p.userId !== leftId));
+      setParticipants(prev => {
+        const leaving = prev.find(p => p.userId === leftId);
+        if (leaving) addToast(`${leaving.displayName} left`, 'leave', '🚶');
+        return prev.filter(p => p.userId !== leftId);
+      });
       setTypingUsers(prev => prev.filter(u => u.userId !== leftId));
     }
 
     function onRoleAssigned({ userId: targetId, role }) {
-      setParticipants(prev =>
-        prev.map(p => p.userId === targetId ? { ...p, role } : p)
-      );
+      setParticipants(prev => {
+        const target = prev.find(p => p.userId === targetId);
+        if (target) {
+          if (role === 'host') {
+            addToast(`${target.displayName} is now the Host`, 'role', '👑');
+          } else if (role === 'moderator') {
+            addToast(`${target.displayName} became a Moderator`, 'role', '🛡️');
+          } else {
+            addToast(`${target.displayName} is now a Viewer`, 'info', '👁️');
+          }
+        }
+        return prev.map(p => p.userId === targetId ? { ...p, role } : p);
+      });
       if (targetId === userId) setMyRole(role);
     }
 
     function onParticipantRemoved({ userId: removedId }) {
-      setParticipants(prev => prev.filter(p => p.userId !== removedId));
+      setParticipants(prev => {
+        const removed = prev.find(p => p.userId === removedId);
+        if (removed && removedId !== userId) {
+          addToast(`${removed.displayName} was removed`, 'warning', '🚫');
+        }
+        return prev.filter(p => p.userId !== removedId);
+      });
       setTypingUsers(prev => prev.filter(u => u.userId !== removedId));
     }
 
@@ -387,6 +432,7 @@ export default function Room() {
         </aside>
 
       </main>
+      <ToastNotifications toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
