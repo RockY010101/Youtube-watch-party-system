@@ -31,7 +31,7 @@ export default function Room() {
   const userId      = location.state?.userId;
   const displayName = location.state?.displayName;
 
-  // ── Room state ───────────────────────────────────────────────────────────
+  // ─── Room state ───────────────────────────────────────────────────────────
   const [participants, setParticipants] = useState([]);
   const [myRole, setMyRole] = useState('participant');
   const [videoState, setVideoState] = useState({
@@ -41,6 +41,7 @@ export default function Room() {
   });
   const [messages, setMessages] = useState([]);
   const [reactions, setReactions] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
   const [error, setError] = useState('');
   const [connected, setConnected] = useState(false);
 
@@ -88,6 +89,7 @@ export default function Room() {
 
     function onUserLeft({ userId: leftId }) {
       setParticipants(prev => prev.filter(p => p.userId !== leftId));
+      setTypingUsers(prev => prev.filter(u => u.userId !== leftId));
     }
 
     function onRoleAssigned({ userId: targetId, role }) {
@@ -99,6 +101,7 @@ export default function Room() {
 
     function onParticipantRemoved({ userId: removedId }) {
       setParticipants(prev => prev.filter(p => p.userId !== removedId));
+      setTypingUsers(prev => prev.filter(u => u.userId !== removedId));
     }
 
     function onYouWereRemoved() {
@@ -109,10 +112,23 @@ export default function Room() {
 
     function onChatMessage(msg) {
       setMessages(prev => [...prev, msg]);
+      // If the user sent a message, they are no longer typing
+      setTypingUsers(prev => prev.filter(u => u.userId !== msg.userId));
     }
 
     function onReceiveReaction(reactionObj) {
       setReactions(prev => [...prev, reactionObj]);
+    }
+
+    function onUserTyping({ userId: tUserId, displayName: tName }) {
+      setTypingUsers(prev => {
+        if (prev.find(u => u.userId === tUserId)) return prev;
+        return [...prev, { userId: tUserId, displayName: tName }];
+      });
+    }
+
+    function onUserStoppedTyping({ userId: sUserId }) {
+      setTypingUsers(prev => prev.filter(u => u.userId !== sUserId));
     }
 
     function onError({ message }) {
@@ -128,6 +144,8 @@ export default function Room() {
     socket.on('you_were_removed',    onYouWereRemoved);
     socket.on('chat_message',        onChatMessage);
     socket.on('receive_reaction',    onReceiveReaction);
+    socket.on('user_typing',         onUserTyping);
+    socket.on('user_stopped_typing', onUserStoppedTyping);
     socket.on('error',               onError);
 
     return () => {
@@ -141,6 +159,8 @@ export default function Room() {
       socket.off('you_were_removed',    onYouWereRemoved);
       socket.off('chat_message',        onChatMessage);
       socket.off('receive_reaction',    onReceiveReaction);
+      socket.off('user_typing',         onUserTyping);
+      socket.off('user_stopped_typing', onUserStoppedTyping);
       socket.off('error',               onError);
       socket.disconnect();
     };
@@ -156,6 +176,8 @@ export default function Room() {
   const emitRemoveParticipant = useCallback((targetUserId) => socket.emit('remove_participant', { targetUserId }), []);
   const emitChatMessage = useCallback((message) => socket.emit('chat_message', { message }), []);
   const emitSendReaction = useCallback((reaction) => socket.emit('send_reaction', { reaction }), []);
+  const emitTypingStart = useCallback(() => socket.emit('typing_start'), []);
+  const emitTypingStop = useCallback(() => socket.emit('typing_stop'), []);
 
   const handlePlay = useCallback(async () => {
     const t = await playerRef.current?.getCurrentTime() ?? 0;
@@ -313,6 +335,9 @@ export default function Room() {
               displayName={displayName}
               onSendMessage={emitChatMessage}
               onSendReaction={emitSendReaction}
+              typingUsers={typingUsers}
+              onTypingStart={emitTypingStart}
+              onTypingStop={emitTypingStop}
             />
             <FloatingReactions reactions={reactions} />
           </div>

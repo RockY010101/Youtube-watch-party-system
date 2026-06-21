@@ -360,6 +360,32 @@ export function registerHandlers(socket) {
     });
   });
 
+  // ─── typing_start ──────────────────────────────────────────────────────────
+  socket.on('typing_start', () => {
+    if (!socket.roomCode || !socket.userId) return;
+    const room = getRoom(socket.roomCode);
+    if (!room) return;
+    const participant = room.getParticipant(socket.userId);
+    if (!participant) return;
+
+    // Broadcast to everyone else that this user is typing
+    socket.to(socket.roomCode).emit('user_typing', {
+      userId: participant.userId,
+      displayName: participant.displayName,
+    });
+  });
+
+  // ─── typing_stop ───────────────────────────────────────────────────────────
+  socket.on('typing_stop', () => {
+    if (!socket.roomCode || !socket.userId) return;
+    const room = getRoom(socket.roomCode);
+    if (!room) return;
+
+    socket.to(socket.roomCode).emit('user_stopped_typing', {
+      userId: socket.userId,
+    });
+  });
+
   // ─── request_sync ──────────────────────────────────────────────────────────
   // Payload: (none)
   //

@@ -17,15 +17,28 @@
 import { useState, useEffect, useRef } from 'react';
 import './Chat.css';
 
-export default function Chat({ messages, myUserId, displayName, onSendMessage, onSendReaction }) {
+export default function Chat({ messages, myUserId, displayName, onSendMessage, onSendReaction, typingUsers = [], onTypingStart, onTypingStop }) {
   const [input, setInput]     = useState('');
   const bottomRef             = useRef(null);
+  const typingTimeoutRef      = useRef(null);
 
   const reactions = ['😂', '😮', '🔥', '❤️', '👏', '💀'];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, typingUsers]);
+
+  function handleInputChange(e) {
+    setInput(e.target.value);
+    
+    if (onTypingStart) {
+      onTypingStart();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        if (onTypingStop) onTypingStop();
+      }, 2000);
+    }
+  }
 
   function handleSend(e) {
     e.preventDefault();
@@ -34,6 +47,9 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
 
     onSendMessage(trimmed);
     setInput('');
+    
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (onTypingStop) onTypingStop();
   }
 
   function handleReaction(reaction) {
@@ -54,6 +70,42 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
       hour:   '2-digit',
       minute: '2-digit',
     });
+  }
+
+  function renderTypingIndicator() {
+    const othersTyping = typingUsers.filter(u => u.userId !== myUserId);
+    if (!othersTyping || othersTyping.length === 0) return null;
+
+    let text = '';
+    const avatars = [];
+
+    if (othersTyping.length === 1) {
+      text = `${othersTyping[0].displayName} is typing...`;
+      avatars.push(othersTyping[0].displayName.charAt(0).toUpperCase());
+    } else if (othersTyping.length === 2) {
+      text = `${othersTyping[0].displayName} and ${othersTyping[1].displayName} are typing...`;
+      avatars.push(othersTyping[0].displayName.charAt(0).toUpperCase());
+      avatars.push(othersTyping[1].displayName.charAt(0).toUpperCase());
+    } else {
+      const remaining = othersTyping.length - 2;
+      text = `${othersTyping[0].displayName}, ${othersTyping[1].displayName} and +${remaining} are typing...`;
+      avatars.push(othersTyping[0].displayName.charAt(0).toUpperCase());
+      avatars.push(othersTyping[1].displayName.charAt(0).toUpperCase());
+    }
+
+    return (
+      <div className="typing-indicator-wrapper">
+        <div className="typing-avatars">
+           {avatars.map((initial, i) => (
+             <div key={i} className="chat-avatar-sm typing-avatar" style={{ zIndex: avatars.length - i }}>{initial}</div>
+           ))}
+        </div>
+        <div className="typing-bubble">
+          <span className="dot"></span><span className="dot"></span><span className="dot"></span>
+        </div>
+        <span className="typing-text">{text}</span>
+      </div>
+    );
   }
 
   return (
@@ -91,6 +143,8 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
           );
         })}
 
+        {renderTypingIndicator()}
+
         <div ref={bottomRef} />
       </div>
 
@@ -100,7 +154,7 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
           type="text"
           placeholder={`Message as ${displayName}…`}
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           maxLength={500}
           autoComplete="off"

@@ -96,3 +96,63 @@
   transform: scale(1.2);
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* ─── Typing Indicator ──────────────────────────────────────────────────────── */
+
+.typing-indicator-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  animation: slideUpFade 0.2s ease-out;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.typing-avatar {
+  border: 2px solid var(--bg-surface);
+  margin-left: -8px;
+}
+
+.typing-avatar:first-child {
+  margin-left: 0;
+}
+
+.typing-bubble {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.dot:nth-child(1) { animation-delay: -0.32s; }
+.dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.typing-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
