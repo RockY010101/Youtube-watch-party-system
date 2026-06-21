@@ -229,6 +229,105 @@ export function registerHandlers(socket) {
     console.log(`[MSG] change_video → ${url} in room ${room.roomCode}`);
   });
 
+  // ─── queue_add ─────────────────────────────────────────────────────────────
+  // Payload: { url }
+  // Host-only. Adds a YouTube URL to the end of the room's queue.
+  // Broadcasts queue_updated to all participants.
+  socket.on('queue_add', ({ url }) => {
+    const auth = getAuthorizedParticipant(false, true); // host only
+    if (!auth) return;
+
+    const { room, participant } = auth;
+
+    const trimmed = (url || '').trim();
+    if (!trimmed) {
+      socket.emit('error', { message: 'URL cannot be empty.' });
+      return;
+    }
+
+    const item = {
+      id:      `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      url:     trimmed,
+      addedBy: participant.displayName,
+    };
+
+    room.addToQueue(item);
+
+    room.broadcast('queue_updated', { queue: room.queue.slice() });
+
+    console.log(`[MSG] queue_add: "${trimmed}" in room ${room.roomCode}`);
+  });
+
+  // ─── queue_remove ──────────────────────────────────────────────────────────
+  // Payload: { id }
+  // Host-only. Removes a queue item by its id.
+  socket.on('queue_remove', ({ id }) => {
+    const auth = getAuthorizedParticipant(false, true);
+    if (!auth) return;
+
+    const { room } = auth;
+
+    room.removeFromQueue(id);
+
+    room.broadcast('queue_updated', { queue: room.queue.slice() });
+
+    console.log(`[MSG] queue_remove: item ${id} from room ${room.roomCode}`);
+  });
+
+  // ─── queue_reorder ─────────────────────────────────────────────────────────
+  // Payload: { fromIndex, toIndex }
+  // Host-only. Moves a queue item from one position to another.
+  socket.on('queue_reorder', ({ fromIndex, toIndex }) => {
+    const auth = getAuthorizedParticipant(false, true);
+    if (!auth) return;
+
+    const { room } = auth;
+
+    room.reorderQueue(fromIndex, toIndex);
+
+    room.broadcast('queue_updated', { queue: room.queue.slice() });
+
+    console.log(`[MSG] queue_reorder: ${fromIndex} → ${toIndex} in room ${room.roomCode}`);
+  });
+
+  // ─── queue_next ────────────────────────────────────────────────────────────
+  // Payload: (none)
+  // Host-only. Shifts the first item off the queue and loads it as the
+  // current video for the whole room. Also resets playback to time 0.
+  //
+  // IMPORTANT: Only the HOST's client should emit this event (e.g. on video
+  // ended), to prevent all clients firing it simultaneously and skipping items.
+  socket.on('queue_next', () => {
+    const auth = getAuthorizedParticipant(false, true);
+    if (!auth) return;
+
+    const { room } = auth;
+
+    const next = room.shiftQueue();
+    if (!next) {
+      // Queue is empty — nothing to advance to
+      console.log(`[MSG] queue_next: queue empty in room ${room.roomCode}`);
+      return;
+    }
+
+    // Load the next video and reset playback
+    room.videoUrl = next.url;
+    room.updateVideoState({ playing: false, currentTime: 0 });
+
+    // Sync everyone to the new video
+    room.broadcast('sync_state', {
+      videoUrl:    next.url,
+      playing:     false,
+      currentTime: 0,
+      participants: Array.from(room.participants.values()).map(p => p.toJSON()),
+    });
+
+    // Notify everyone the queue changed
+    room.broadcast('queue_updated', { queue: room.queue.slice() });
+
+    console.log(`[MSG] queue_next → "${next.url}" in room ${room.roomCode}`);
+  });
+
   // ─── assign_role ───────────────────────────────────────────────────────────
   // Payload: { targetUserId, role }
   //

@@ -21,7 +21,7 @@ function extractVideoId(input) {
 }
 
 const YoutubePlayer = forwardRef(function YoutubePlayer(
-  { videoUrl, canControl, onPlay, onPause },
+  { videoUrl, canControl, onPlay, onPause, onEnded },
   ref
 ) {
   const playerRef      = useRef(null);
@@ -33,10 +33,13 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
   // the stale closure inside onStateChange would still read the old value.
   // Using a ref lets the callback always read the LATEST canControl.
   const canControlRef  = useRef(canControl);
+  // Keep onEnded in a ref so the YT callback always calls the latest version
+  const onEndedRef     = useRef(onEnded);
   const [currentVideoId, setCurrentVideoId] = useState('');
 
   // Keep canControlRef in sync whenever the prop changes
   useEffect(() => { canControlRef.current = canControl; }, [canControl]);
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
 
   // Load YouTube API once
   useEffect(() => {
@@ -82,6 +85,9 @@ const YoutubePlayer = forwardRef(function YoutubePlayer(
           const t = e.target.getCurrentTime();
           if (e.data === 1) onPlay(t);   // 1 = playing
           if (e.data === 2) onPause(t);  // 2 = paused
+          if (e.data === 0) {            // 0 = ended — only host triggers queue_next
+            if (onEndedRef.current) onEndedRef.current();
+          }
         },
         onError: (e) => console.error('[YT] Error:', e.data),
       },

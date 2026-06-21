@@ -21,6 +21,7 @@ import ParticipantList from '../components/ParticipantList.jsx';
 import Chat from '../components/Chat.jsx';
 import FloatingReactions from '../components/FloatingReactions.jsx';
 import ToastNotifications from '../components/ToastNotifications.jsx';
+import VideoQueue from '../components/VideoQueue.jsx';
 
 export default function Room() {
   // ── Router hooks ────────────────────────────────────────────────────────
@@ -47,8 +48,11 @@ export default function Room() {
   const [connected, setConnected] = useState(false);
 
   // ── UI state ─────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'members'
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'members' | 'queue'
   const [codeCopied, setCodeCopied] = useState(false);
+
+  // ── Queue state ───────────────────────────────────────────────────────────
+  const [queue, setQueue] = useState([]);
 
   const handleCopyCode = useCallback(() => {
     navigator.clipboard.writeText(code).then(() => {
@@ -93,6 +97,7 @@ export default function Room() {
       setParticipants(room.participants);
       setMyRole(you.role);
       setVideoState(room.videoState);
+      setQueue(room.queue ?? []);  // hydrate queue on join
       setConnected(true);
     }
 
@@ -188,6 +193,10 @@ export default function Room() {
       console.error('[Room] Server error:', message);
     }
 
+    function onQueueUpdated({ queue: newQueue }) {
+      setQueue(newQueue);
+    }
+
     socket.on('joined_room',         onJoinedRoom);
     socket.on('sync_state',          onSyncState);
     socket.on('user_joined',         onUserJoined);
@@ -200,6 +209,7 @@ export default function Room() {
     socket.on('user_typing',         onUserTyping);
     socket.on('user_stopped_typing', onUserStoppedTyping);
     socket.on('error',               onError);
+    socket.on('queue_updated',       onQueueUpdated);
 
     return () => {
       socket.emit('leave_room', { code });
@@ -215,6 +225,7 @@ export default function Room() {
       socket.off('user_typing',         onUserTyping);
       socket.off('user_stopped_typing', onUserStoppedTyping);
       socket.off('error',               onError);
+      socket.off('queue_updated',       onQueueUpdated);
       socket.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -231,6 +242,20 @@ export default function Room() {
   const emitSendReaction = useCallback((reaction) => socket.emit('send_reaction', { reaction }), []);
   const emitTypingStart = useCallback(() => socket.emit('typing_start'), []);
   const emitTypingStop = useCallback(() => socket.emit('typing_stop'), []);
+
+  // ── Queue emit helpers (host-only on the server) ───────────────────────────
+  const emitQueueAdd     = useCallback((url)                 => socket.emit('queue_add',     { url }),             []);
+  const emitQueueRemove  = useCallback((id)                  => socket.emit('queue_remove',  { id }),              []);
+  const emitQueueReorder = useCallback((fromIndex, toIndex)  => socket.emit('queue_reorder', { fromIndex, toIndex }), []);
+  const emitQueueNext    = useCallback(()                    => socket.emit('queue_next'),                         []);
+
+  // Auto-advance: when video ends and queue has items, play the next one.
+  // Only the host fires this to avoid multiple clients racing.
+  const handleVideoEnded = useCallback(() => {
+    if (queue.length > 0) {
+      emitQueueNext();
+    }
+  }, [queue, emitQueueNext]);
 
   const handlePlay = useCallback(async () => {
     const t = await playerRef.current?.getCurrentTime() ?? 0;
@@ -376,6 +401,7 @@ export default function Room() {
               onPlay={emitPlay}
               onPause={emitPause}
               onSeek={emitSeek}
+              onEnded={isHost ? handleVideoEnded : undefined}
             />
           </div>
           <VideoControls
@@ -404,6 +430,12 @@ export default function Room() {
             >
               Members
             </button>
+            <button
+              className={`sidebar-tab ${activeTab === 'queue' ? 'active' : ''}`}
+              onClick={() => setActiveTab('queue')}
+            >
+              Queue {queue.length > 0 && <span className="sidebar-tab-badge">{queue.length}</span>}
+            </button>
           </div>
 
           <div className={`sidebar-panel ${activeTab === 'chat' ? 'active' : ''}`}>
@@ -427,6 +459,17 @@ export default function Room() {
               isHost={isHost}
               onAssignRole={emitAssignRole}
               onRemoveParticipant={emitRemoveParticipant}
+            />
+          </div>
+
+          <div className={`sidebar-panel ${activeTab === 'queue' ? 'active' : ''}`}>
+            <VideoQueue
+              queue={queue}
+              isHost={isHost}
+              onAdd={emitQueueAdd}
+              onRemove={emitQueueRemove}
+              onReorder={emitQueueReorder}
+              onPlayNext={emitQueueNext}
             />
           </div>
         </aside>

@@ -48,6 +48,11 @@ export class Room {
     // A Map is used instead of an array so we can look up, update, and delete
     // participants in O(1) by userId (no looping needed).
     this.participants = new Map();
+
+    // queue — ordered list of upcoming videos.
+    // Each item: { id: string, url: string, addedBy: string }
+    // Only the host can mutate this list.
+    this.queue = [];
   }
 
   // ─── addParticipant(participant) ─────────────────────────────────────────────
@@ -112,6 +117,36 @@ export class Room {
     this.videoState.lastSyncAt = Date.now();
   }
 
+  // ─── Queue helpers ────────────────────────────────────────────────────────────
+
+  // addToQueue({ id, url, addedBy }) — appends one item to the end of the queue.
+  addToQueue(item) {
+    this.queue.push(item);
+  }
+
+  // removeFromQueue(id) — removes the item with the given id.
+  removeFromQueue(id) {
+    this.queue = this.queue.filter(item => item.id !== id);
+  }
+
+  // reorderQueue(fromIndex, toIndex) — moves one item to a new position.
+  reorderQueue(fromIndex, toIndex) {
+    const len = this.queue.length;
+    if (
+      fromIndex < 0 || fromIndex >= len ||
+      toIndex   < 0 || toIndex   >= len ||
+      fromIndex === toIndex
+    ) return;
+    const [item] = this.queue.splice(fromIndex, 1);
+    this.queue.splice(toIndex, 0, item);
+  }
+
+  // shiftQueue() — removes and returns the first item in the queue ("play next").
+  // Returns undefined if the queue is empty.
+  shiftQueue() {
+    return this.queue.shift();
+  }
+
   // ─── broadcast(event, payload, excludeSocketId) ───────────────────────────────
   // Emits a Socket.IO event to EVERY socket in this room.
   //
@@ -151,6 +186,7 @@ export class Room {
         lastSyncAt:  this.videoState.lastSyncAt,
       },
       participants: Array.from(this.participants.values()).map(p => p.toJSON()),
+      queue:        this.queue.slice(), // send a copy so callers can't mutate
     };
   }
 }

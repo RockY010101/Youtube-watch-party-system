@@ -1,0 +1,242 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   VideoQueue.css
+   Styled to match the existing dark sidebar aesthetic.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Container ────────────────────────────────────────────────────────────── */
+.video-queue {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Add form (host only) ─────────────────────────────────────────────────── */
+.queue-add-form {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.queue-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.queue-url-input {
+  flex: 1;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  outline: none;
+  min-width: 0;
+  transition: border-color var(--transition);
+}
+
+.queue-url-input::placeholder { color: var(--text-muted); }
+.queue-url-input:focus { border-color: var(--accent); }
+
+.queue-add-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.queue-add-btn:hover {
+  background: var(--accent-hover);
+  box-shadow: var(--accent-glow);
+}
+
+.queue-error {
+  font-size: 0.75rem;
+  color: #ff6b6b;
+  margin: 6px 0 0;
+}
+
+/* ── Play Next button ─────────────────────────────────────────────────────── */
+.queue-play-next-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 24px);
+  margin: 10px 12px 4px;
+  background: rgba(229, 57, 53, 0.12);
+  border: 1px solid rgba(229, 57, 53, 0.35);
+  color: #ef5350;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.queue-play-next-btn:hover {
+  background: rgba(229, 57, 53, 0.22);
+  border-color: rgba(229, 57, 53, 0.6);
+  color: #ff6b6b;
+}
+
+/* ── Queue list ───────────────────────────────────────────────────────────── */
+.queue-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Queue item ───────────────────────────────────────────────────────────── */
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.queue-item:hover {
+  background: var(--bg-hover);
+  border-color: #3a3a3a;
+}
+
+/* "Up next" item gets a red left accent */
+.queue-item--next {
+  border-left: 3px solid var(--accent);
+  background: rgba(229, 57, 53, 0.06);
+}
+
+/* ── Position badge ───────────────────────────────────────────────────────── */
+.queue-item__pos {
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.queue-up-next {
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+
+/* ── Thumbnail ────────────────────────────────────────────────────────────── */
+.queue-thumb {
+  width: 72px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #0a0a0a;
+}
+
+.queue-thumb--empty {
+  background: #1a1a1a;
+  border: 1px dashed var(--border);
+}
+
+/* ── Info text ────────────────────────────────────────────────────────────── */
+.queue-item__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.queue-item__url {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-item__meta {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* ── Item action buttons ──────────────────────────────────────────────────── */
+.queue-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.queue-ctrl-btn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition), border-color var(--transition);
+}
+
+.queue-ctrl-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+
+.queue-ctrl-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.queue-ctrl-btn--remove:hover:not(:disabled) {
+  color: #ef5350;
+  background: rgba(239, 83, 80, 0.12);
+  border-color: rgba(239, 83, 80, 0.3);
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.queue-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+}
+
+.queue-empty__icon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+.queue-empty__text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
