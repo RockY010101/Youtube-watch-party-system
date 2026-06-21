@@ -53,6 +53,10 @@ export class Room {
     // Each item: { id: string, url: string, addedBy: string }
     // Only the host can mutate this list.
     this.queue = [];
+
+    // poll — active poll state.
+    // Structure: { id: string, question: string, options: [{ id, text, votes }], votedUsers: [userIds] }
+    this.poll = null;
   }
 
   // ─── addParticipant(participant) ─────────────────────────────────────────────
@@ -187,6 +191,7 @@ export class Room {
       },
       participants: Array.from(this.participants.values()).map(p => p.toJSON()),
       queue:        this.queue.slice(), // send a copy so callers can't mutate
+      poll:         this.poll,
     };
   }
 }

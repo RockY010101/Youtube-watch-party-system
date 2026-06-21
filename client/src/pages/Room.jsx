@@ -54,6 +54,9 @@ export default function Room() {
   // ── Queue state ───────────────────────────────────────────────────────────
   const [queue, setQueue] = useState([]);
 
+  // ── Poll state ────────────────────────────────────────────────────────────
+  const [poll, setPoll] = useState(null);
+
   const handleCopyCode = useCallback(() => {
     navigator.clipboard.writeText(code).then(() => {
       setCodeCopied(true);
@@ -98,6 +101,7 @@ export default function Room() {
       setMyRole(you.role);
       setVideoState(room.videoState);
       setQueue(room.queue ?? []);  // hydrate queue on join
+      setPoll(room.poll ?? null);  // hydrate poll on join
       setConnected(true);
     }
 
@@ -197,6 +201,10 @@ export default function Room() {
       setQueue(newQueue);
     }
 
+    function onPollUpdated({ poll: newPoll }) {
+      setPoll(newPoll);
+    }
+
     socket.on('joined_room',         onJoinedRoom);
     socket.on('sync_state',          onSyncState);
     socket.on('user_joined',         onUserJoined);
@@ -210,6 +218,7 @@ export default function Room() {
     socket.on('user_stopped_typing', onUserStoppedTyping);
     socket.on('error',               onError);
     socket.on('queue_updated',       onQueueUpdated);
+    socket.on('poll_updated',        onPollUpdated);
 
     return () => {
       socket.emit('leave_room', { code });
@@ -226,6 +235,7 @@ export default function Room() {
       socket.off('user_stopped_typing', onUserStoppedTyping);
       socket.off('error',               onError);
       socket.off('queue_updated',       onQueueUpdated);
+      socket.off('poll_updated',        onPollUpdated);
       socket.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -248,6 +258,11 @@ export default function Room() {
   const emitQueueRemove  = useCallback((id)                  => socket.emit('queue_remove',  { id }),              []);
   const emitQueueReorder = useCallback((fromIndex, toIndex)  => socket.emit('queue_reorder', { fromIndex, toIndex }), []);
   const emitQueueNext    = useCallback(()                    => socket.emit('queue_next'),                         []);
+
+  // ── Poll emit helpers ─────────────────────────────────────────────────────
+  const emitPollCreate   = useCallback((data)     => socket.emit('poll_create', data),       []);
+  const emitPollVote     = useCallback((optionId) => socket.emit('poll_vote', { optionId }), []);
+  const emitPollClose    = useCallback(()         => socket.emit('poll_close'),              []);
 
   // Auto-advance: when video ends and queue has items, play the next one.
   // Only the host fires this to avoid multiple clients racing.
@@ -448,6 +463,11 @@ export default function Room() {
               typingUsers={typingUsers}
               onTypingStart={emitTypingStart}
               onTypingStop={emitTypingStop}
+              poll={poll}
+              isHost={isHost}
+              onPollCreate={emitPollCreate}
+              onPollVote={emitPollVote}
+              onPollClose={emitPollClose}
             />
             <FloatingReactions reactions={reactions} />
           </div>

@@ -322,10 +322,79 @@ export function registerHandlers(socket) {
       participants: Array.from(room.participants.values()).map(p => p.toJSON()),
     });
 
-    // Notify everyone the queue changed
+  // Notify everyone the queue changed
     room.broadcast('queue_updated', { queue: room.queue.slice() });
 
     console.log(`[MSG] queue_next → "${next.url}" in room ${room.roomCode}`);
+  });
+
+  // ─── poll_create ───────────────────────────────────────────────────────────
+  // Payload: { question: string, options: [{id, text}] }
+  // Host-only. Creates a new poll.
+  socket.on('poll_create', ({ question, options }) => {
+    const auth = getAuthorizedParticipant(false, true); // host only
+    if (!auth) return;
+    const { room } = auth;
+
+    if (!question || !options || !Array.isArray(options) || options.length < 2) {
+      socket.emit('error', { message: 'Invalid poll data.' });
+      return;
+    }
+
+    room.poll = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      question,
+      options: options.map(opt => ({ id: opt.id, text: opt.text, votes: 0 })),
+      votedUsers: [], // Array of userIds who have voted
+    };
+
+    room.broadcast('poll_updated', { poll: room.poll });
+    console.log(`[MSG] poll_create in room ${room.roomCode}`);
+  });
+
+  // ─── poll_vote ─────────────────────────────────────────────────────────────
+  // Payload: { optionId }
+  // Any participant can vote once.
+  socket.on('poll_vote', ({ optionId }) => {
+    // We only need the user to be in the room, no special permissions
+    const auth = getAuthorizedParticipant(false, false); 
+    if (!auth) return;
+    const { room, participant } = auth;
+
+    if (!room.poll) {
+      socket.emit('error', { message: 'No active poll.' });
+      return;
+    }
+
+    if (room.poll.votedUsers.includes(participant.userId)) {
+      socket.emit('error', { message: 'You have already voted.' });
+      return;
+    }
+
+    const option = room.poll.options.find(o => o.id === optionId);
+    if (!option) {
+      socket.emit('error', { message: 'Invalid poll option.' });
+      return;
+    }
+
+    // Register vote
+    option.votes += 1;
+    room.poll.votedUsers.push(participant.userId);
+
+    room.broadcast('poll_updated', { poll: room.poll });
+  });
+
+  // ─── poll_close ────────────────────────────────────────────────────────────
+  // Payload: none
+  // Host-only. Ends and clears the poll.
+  socket.on('poll_close', () => {
+    const auth = getAuthorizedParticipant(false, true); // host only
+    if (!auth) return;
+    const { room } = auth;
+
+    room.poll = null;
+    room.broadcast('poll_updated', { poll: null });
+    console.log(`[MSG] poll_close in room ${room.roomCode}`);
   });
 
   // ─── assign_role ───────────────────────────────────────────────────────────

@@ -16,8 +16,23 @@
 
 import { useState, useEffect, useRef } from 'react';
 import './Chat.css';
+import PollWidget from './PollWidget.jsx';
 
-export default function Chat({ messages, myUserId, displayName, onSendMessage, onSendReaction, typingUsers = [], onTypingStart, onTypingStop }) {
+export default function Chat({ 
+  messages, 
+  myUserId, 
+  displayName, 
+  onSendMessage, 
+  onSendReaction, 
+  typingUsers = [], 
+  onTypingStart, 
+  onTypingStop,
+  poll,
+  isHost,
+  onPollCreate,
+  onPollVote,
+  onPollClose 
+}) {
   const [input, setInput]     = useState('');
   const bottomRef             = useRef(null);
   const typingTimeoutRef      = useRef(null);
@@ -147,6 +162,15 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
 
         <div ref={bottomRef} />
       </div>
+
+      <PollWidget 
+        poll={poll} 
+        isHost={isHost} 
+        myUserId={myUserId} 
+        onCreate={onPollCreate} 
+        onVote={onPollVote} 
+        onClose={onPollClose} 
+      />
 
       <form className="chat-input-form" onSubmit={handleSend}>
         <input
