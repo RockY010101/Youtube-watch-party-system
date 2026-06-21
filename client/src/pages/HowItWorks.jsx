@@ -1,6 +1,28 @@
 import Navbar from '../components/Navbar.jsx';
+import './HowItWorks.css';
 
 export default function HowItWorks() {
+  const steps = [
+    {
+      number: '1',
+      title: 'Create a Room',
+      description: 'Navigate to the Home page and enter your display name to start a new party. You will automatically become the Host and receive a unique 6-character room code.',
+      image: '/images/step_1.png'
+    },
+    {
+      number: '2',
+      title: 'Invite Friends',
+      description: 'Share the room code or the direct room link with your friends. They can join your room by simply entering the code and their name on the Home page.',
+      image: '/images/step_2.png'
+    },
+    {
+      number: '3',
+      title: 'Watch Together',
+      description: 'Paste any YouTube URL into the player. As the host, you have full control over the playback. Sit back, relax, and enjoy the show together in perfect sync!',
+      image: '/images/step_3.png'
+    }
+  ];
+
   return (
     <div className="home-page">
       <Navbar />
@@ -12,40 +34,24 @@ export default function HowItWorks() {
           Get started with YouTube Watch Party in three simple steps.
         </p>
       </div>
-      <div className="home-cards" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px', margin: '0 auto', padding: '0 2rem', paddingBottom: '4rem' }}>
-        <div className="card" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <div style={{ padding: '1.5rem', fontSize: '3rem', fontWeight: 'bold', color: '#ff2e55' }}>1</div>
-          <div>
-            <div className="card-header" style={{ paddingLeft: 0 }}>
-              <h2 className="card-title">Create a Room</h2>
+      
+      <div className="how-it-works-container">
+        {steps.map((step, index) => (
+          <div key={index} className="step-card">
+            <div className="step-image-container">
+              <img src={step.image} alt={step.title} className="step-image" />
             </div>
-            <p style={{ padding: '0 1.5rem 1.5rem 0', color: '#aaa', lineHeight: '1.6' }}>
-              Navigate to the Home page and enter your display name to start a new party. You will automatically become the Host and receive a unique 6-character room code.
-            </p>
-          </div>
-        </div>
-        <div className="card" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <div style={{ padding: '1.5rem', fontSize: '3rem', fontWeight: 'bold', color: '#ff2e55' }}>2</div>
-          <div>
-            <div className="card-header" style={{ paddingLeft: 0 }}>
-              <h2 className="card-title">Invite Friends</h2>
+            <div className="step-content">
+              <div className="step-header">
+                <span className="step-number">{step.number}</span>
+                <h2 className="step-title">{step.title}</h2>
+              </div>
+              <p className="step-description">
+                {step.description}
+              </p>
             </div>
-            <p style={{ padding: '0 1.5rem 1.5rem 0', color: '#aaa', lineHeight: '1.6' }}>
-              Share the room code or the direct room link with your friends. They can join your room by simply entering the code and their name on the Home page.
-            </p>
           </div>
-        </div>
-        <div className="card" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <div style={{ padding: '1.5rem', fontSize: '3rem', fontWeight: 'bold', color: '#ff2e55' }}>3</div>
-          <div>
-            <div className="card-header" style={{ paddingLeft: 0 }}>
-              <h2 className="card-title">Watch Together</h2>
-            </div>
-            <p style={{ padding: '0 1.5rem 1.5rem 0', color: '#aaa', lineHeight: '1.6' }}>
-              Paste any YouTube URL into the player. As the host, you have full control over the playback. Sit back, relax, and enjoy the show together in perfect sync!
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
