@@ -6,10 +6,37 @@
   height: 100%;
 }
 
+.reaction-menu-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reaction-trigger-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.reaction-trigger-btn:hover {
+  background: var(--bg-hover);
+}
+
 .chat-reactions-bar {
   position: absolute;
-  right: 16px;
-  bottom: 60px; /* Above the input */
+  bottom: calc(100% + 8px); /* Right above the trigger button */
+  right: 50%;
+  transform: translateX(50%) translateY(10px) scale(0.95);
   display: flex;
   flex-direction: column; /* Vertical pill */
   justify-content: space-around;
@@ -22,6 +49,16 @@
   box-shadow: var(--shadow-lg);
   z-index: 10;
   gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Show the menu on hover of the wrapper */
+.reaction-menu-wrapper:hover .chat-reactions-bar {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(50%) translateY(0) scale(1);
 }
 
 .chat-reaction-btn {

@@ -94,19 +94,6 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
         <div ref={bottomRef} />
       </div>
 
-      <div className="chat-reactions-bar">
-        {reactions.map((emoji) => (
-          <button
-            key={emoji}
-            className="chat-reaction-btn"
-            onClick={() => handleReaction(emoji)}
-            title={`React with ${emoji}`}
-          >
-            {emoji}
-          </button>
-        ))}
-      </div>
-
       <form className="chat-input-form" onSubmit={handleSend}>
         <input
           className="chat-input"
@@ -125,6 +112,25 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
         >
           Send
         </button>
+        
+        <div className="reaction-menu-wrapper">
+          <button className="reaction-trigger-btn" type="button" title="Reactions">
+            ♡
+          </button>
+          <div className="chat-reactions-bar">
+            {reactions.map((emoji) => (
+              <button
+                key={emoji}
+                className="chat-reaction-btn"
+                type="button"
+                onClick={() => handleReaction(emoji)}
+                title={`React with ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
       </form>
 
     </div>
