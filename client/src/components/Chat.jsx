@@ -17,7 +17,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './Chat.css';
 
-export default function Chat({ messages, myUserId, displayName, onSendMessage }) {
+export default function Chat({ messages, myUserId, displayName, onSendMessage, onSendReaction }) {
   const [input, setInput]     = useState('');
   const bottomRef             = useRef(null);
 
@@ -37,7 +37,9 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage })
   }
 
   function handleReaction(reaction) {
-    onSendMessage(reaction);
+    if (onSendReaction) {
+      onSendReaction(reaction);
+    }
   }
 
   function handleKeyDown(e) {

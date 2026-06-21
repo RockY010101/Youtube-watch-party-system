@@ -19,6 +19,7 @@ import YoutubePlayer from '../components/YoutubePlayer.jsx';
 import VideoControls from '../components/VideoControls.jsx';
 import ParticipantList from '../components/ParticipantList.jsx';
 import Chat from '../components/Chat.jsx';
+import FloatingReactions from '../components/FloatingReactions.jsx';
 
 export default function Room() {
   // ── Router hooks ────────────────────────────────────────────────────────
@@ -39,6 +40,7 @@ export default function Room() {
     playing: false,
   });
   const [messages, setMessages] = useState([]);
+  const [reactions, setReactions] = useState([]);
   const [error, setError] = useState('');
   const [connected, setConnected] = useState(false);
 
@@ -109,6 +111,10 @@ export default function Room() {
       setMessages(prev => [...prev, msg]);
     }
 
+    function onReceiveReaction(reactionObj) {
+      setReactions(prev => [...prev, reactionObj]);
+    }
+
     function onError({ message }) {
       console.error('[Room] Server error:', message);
     }
@@ -121,6 +127,7 @@ export default function Room() {
     socket.on('participant_removed', onParticipantRemoved);
     socket.on('you_were_removed',    onYouWereRemoved);
     socket.on('chat_message',        onChatMessage);
+    socket.on('receive_reaction',    onReceiveReaction);
     socket.on('error',               onError);
 
     return () => {
@@ -133,6 +140,7 @@ export default function Room() {
       socket.off('participant_removed', onParticipantRemoved);
       socket.off('you_were_removed',    onYouWereRemoved);
       socket.off('chat_message',        onChatMessage);
+      socket.off('receive_reaction',    onReceiveReaction);
       socket.off('error',               onError);
       socket.disconnect();
     };
@@ -147,6 +155,7 @@ export default function Room() {
   const emitAssignRole = useCallback((targetUserId, role) => socket.emit('assign_role', { targetUserId, role }), []);
   const emitRemoveParticipant = useCallback((targetUserId) => socket.emit('remove_participant', { targetUserId }), []);
   const emitChatMessage = useCallback((message) => socket.emit('chat_message', { message }), []);
+  const emitSendReaction = useCallback((reaction) => socket.emit('send_reaction', { reaction }), []);
 
   const handlePlay = useCallback(async () => {
     const t = await playerRef.current?.getCurrentTime() ?? 0;
@@ -303,7 +312,9 @@ export default function Room() {
               myUserId={userId}
               displayName={displayName}
               onSendMessage={emitChatMessage}
+              onSendReaction={emitSendReaction}
             />
+            <FloatingReactions reactions={reactions} />
           </div>
 
           <div className={`sidebar-panel ${activeTab === 'members' ? 'active' : ''}`}>

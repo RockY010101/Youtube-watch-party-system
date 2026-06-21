@@ -1,27 +1,45 @@
-.chat-reactions-bar {
+/* Update Chat container to be relative for absolute positioning of reactions */
+.chat {
+  position: relative;
   display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-reactions-bar {
+  position: absolute;
+  right: 16px;
+  bottom: 60px; /* Above the input */
+  display: flex;
+  flex-direction: column; /* Vertical pill */
   justify-content: space-around;
   align-items: center;
-  padding: 8px 12px;
-  background: var(--bg-surface);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
+  padding: 8px 4px;
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full); /* Pill shape */
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  gap: 8px;
 }
 
 .chat-reaction-btn {
   background: none;
   border: none;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   cursor: pointer;
   padding: 4px;
-  border-radius: var(--radius-md);
+  border-radius: 50%;
   transition: transform 0.2s ease, background 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
 }
 
 .chat-reaction-btn:hover {
   transform: scale(1.2);
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.1);
 }

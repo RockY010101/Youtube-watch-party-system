@@ -339,6 +339,27 @@ export function registerHandlers(socket) {
     console.log(`[MSG] chat from ${participant.displayName} in room ${room.roomCode}`);
   });
 
+  // ─── send_reaction ─────────────────────────────────────────────────────────
+  // Payload: { reaction }
+  // Broadcasts a floating reaction to everyone in the room without saving to chat history.
+  socket.on('send_reaction', ({ reaction }) => {
+    if (!socket.roomCode || !socket.userId) return;
+
+    const room = getRoom(socket.roomCode);
+    if (!room) return;
+
+    const participant = room.getParticipant(socket.userId);
+    if (!participant) return;
+
+    room.broadcast('receive_reaction', {
+      userId: participant.userId,
+      displayName: participant.displayName,
+      reaction,
+      timestamp: Date.now(),
+      id: Math.random().toString(36).substr(2, 9), // unique ID for animation
+    });
+  });
+
   // ─── request_sync ──────────────────────────────────────────────────────────
   // Payload: (none)
   //
