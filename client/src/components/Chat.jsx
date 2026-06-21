@@ -105,17 +105,10 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
           maxLength={500}
           autoComplete="off"
         />
-        <button
-          className="btn-send"
-          type="submit"
-          disabled={!input.trim()}
-        >
-          Send
-        </button>
-        
+
         <div className="reaction-menu-wrapper">
           <button className="reaction-trigger-btn" type="button" title="Reactions">
-            ♡
+            ❤️
           </button>
           <div className="chat-reactions-bar">
             {reactions.map((emoji) => (
@@ -131,6 +124,14 @@ export default function Chat({ messages, myUserId, displayName, onSendMessage, o
             ))}
           </div>
         </div>
+
+        <button
+          className="btn-send"
+          type="submit"
+          disabled={!input.trim()}
+        >
+          Send
+        </button>
       </form>
 
     </div>
