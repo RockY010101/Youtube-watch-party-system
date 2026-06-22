@@ -22,6 +22,8 @@ import Chat from '../components/Chat.jsx';
 import FloatingReactions from '../components/FloatingReactions.jsx';
 import ToastNotifications from '../components/ToastNotifications.jsx';
 import VideoQueue from '../components/VideoQueue.jsx';
+import { useAudioChat } from '../hooks/useAudioChat.js';
+import AudioStreams from '../components/AudioStreams.jsx';
 
 export default function Room() {
   // ── Router hooks ────────────────────────────────────────────────────────
@@ -46,6 +48,25 @@ export default function Room() {
   const [typingUsers, setTypingUsers] = useState([]);
   const [error, setError] = useState('');
   const [connected, setConnected] = useState(false);
+
+  // ─── Audio Chat Hook ───────────────────────────────────────────────────────
+  const currentUser = participants.find(p => p.userId === userId);
+  const {
+    audioStreams,
+    joinRequests,
+    speakingUsers,
+    toggleMute,
+    toggleDeafen,
+    requestVoice,
+    leaveVoice,
+    admitUser,
+    denyUser,
+    muteUser
+  } = useAudioChat(code, currentUser, participants);
+
+  // Filter participants for voice channel
+  const voiceParticipants = participants.filter(p => p.voiceStatus === 'joined');
+  const otherParticipants = participants.filter(p => p.voiceStatus !== 'joined');
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'members' | 'queue'
@@ -205,12 +226,17 @@ export default function Room() {
       setPoll(newPoll);
     }
 
+    function onParticipantUpdated({ participant }) {
+      setParticipants(prev => prev.map(p => p.userId === participant.userId ? participant : p));
+    }
+
     socket.on('joined_room',         onJoinedRoom);
     socket.on('sync_state',          onSyncState);
     socket.on('user_joined',         onUserJoined);
     socket.on('user_left',           onUserLeft);
     socket.on('role_assigned',       onRoleAssigned);
     socket.on('participant_removed', onParticipantRemoved);
+    socket.on('participant_updated', onParticipantUpdated);
     socket.on('you_were_removed',    onYouWereRemoved);
     socket.on('chat_message',        onChatMessage);
     socket.on('receive_reaction',    onReceiveReaction);
@@ -228,6 +254,7 @@ export default function Room() {
       socket.off('user_left',           onUserLeft);
       socket.off('role_assigned',       onRoleAssigned);
       socket.off('participant_removed', onParticipantRemoved);
+      socket.off('participant_updated', onParticipantUpdated);
       socket.off('you_were_removed',    onYouWereRemoved);
       socket.off('chat_message',        onChatMessage);
       socket.off('receive_reaction',    onReceiveReaction);
@@ -350,33 +377,91 @@ export default function Room() {
                 onClick={handleCopyCode}
                 title="Copy room code"
               >
-                {codeCopied ? (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                    </svg>
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
-                      <path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h3.879a1.5 1.5 0 0 1 1.06.44l3.122 3.12A1.5 1.5 0 0 1 17 6.622V12.5a1.5 1.5 0 0 1-1.5 1.5h-1v-3.379a3 3 0 0 0-.879-2.121L10.5 5.379A3 3 0 0 0 8.379 4.5H7v-1Z" />
-                      <path d="M4.5 6A1.5 1.5 0 0 0 3 7.5v9A1.5 1.5 0 0 0 4.5 18h7a1.5 1.5 0 0 0 1.5-1.5v-5.879a1.5 1.5 0 0 0-.44-1.06L9.44 6.439A1.5 1.5 0 0 0 8.378 6H4.5Z" />
-                    </svg>
-                    Copy
-                  </>
-                )}
+                {codeCopied ? 'Copied!' : 'Copy'}
               </button>
             </div>
           </div>
 
-          <div className="left-participants-header">
-            <span className="left-participants-icon">👥</span>
-            <span className="left-participants-title">Participants</span>
-            <span className="left-participants-count">{participants.length} online</span>
+          {/* Voice Channel */}
+          <div className="voice-channel-container">
+            <div 
+              className="voice-channel-header" 
+              onClick={() => {
+                if (currentUser?.voiceStatus === 'none') requestVoice();
+                else if (currentUser?.voiceStatus === 'joined') leaveVoice();
+              }}
+              style={{ cursor: 'pointer', padding: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#43b581', fontWeight: 'bold' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11 2v10.553c-1.332.327-2.332 1.547-2.332 3.018v.429c0 1.657 1.343 3 3 3s3-1.343 3-3v-.429c0-1.471-1-2.691-2.332-3.018v-4.553h3.332v1.895c0 .552.448 1 1 1s1-.448 1-1v-2.895c0-.552-.448-1-1-1h-5.668z"/>
+              </svg>
+              Lounge
+            </div>
+
+            {/* Render Voice Participants */}
+            <div className="voice-participants" style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {voiceParticipants.map((p) => {
+                const isMe = p.userId === userId;
+                return (
+                  <div key={p.userId} className="voice-participant-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px', borderRadius: '4px', background: isMe ? 'rgba(255,255,255,0.05)' : 'transparent' }}>
+                    <div className="left-participant-avatar" style={{ width: '24px', height: '24px', fontSize: '12px', border: speakingUsers.has(p.userId) ? '2px solid #3ba55d' : '2px solid transparent', boxShadow: speakingUsers.has(p.userId) ? '0 0 5px #3ba55d' : 'none', boxSizing: 'border-box' }}>
+                      {p.displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ color: isMe ? '#fff' : '#b9bbbe', flex: 1, fontSize: '14px' }}>{p.displayName}</span>
+                    
+                    {/* Audio Status Icons */}
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      {!p.micOn && (
+                        <span title="Muted" style={{ color: '#ed4245', fontSize: '14px' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.78 4.37a5 5 0 0 1 10.44 0v6.26l-10.44-10.44zm-.78.78 12.85 12.85-1.41 1.41-2.82-2.82c-1.32.74-2.85 1.15-4.62 1.15-4.97 0-9-4.03-9-9h2c0 3.86 3.14 7 7 7 1.3 0 2.52-.35 3.58-.96l-3.58-3.58v2.54h-2v-4.3l-2-2v6.3h2v-2.54l-1.58-1.58A5 5 0 0 1 6 5.15z"/></svg>
+                        </span>
+                      )}
+                      {p.deafened && (
+                        <span title="Deafened" style={{ color: '#ed4245', fontSize: '14px' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c5.52 0 10 4.48 10 10v4.5c0 1.38-1.12 2.5-2.5 2.5h-1.5v-7h2A8 8 0 0 0 4 12h2v7H4.5C3.12 19 2 17.88 2 16.5V12c0-5.52 4.48-10 10-10zm-1.07 3.52 9.55 9.55-1.42 1.42-9.55-9.55 1.42-1.42z"/></svg>
+                        </span>
+                      )}
+
+                      {/* Controls for host over others */}
+                      {isHost && !isMe && p.micOn && (
+                        <button onClick={() => muteUser(p.userId)} style={{ background: 'none', border: 'none', color: '#ed4245', cursor: 'pointer', padding: '0 4px' }} title="Force Mute">
+                          🔇
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {participants.map((p) => (
+          {/* Join Requests for Host */}
+          {isHost && joinRequests.length > 0 && (
+            <div className="join-requests" style={{ margin: '10px 0', padding: '10px', background: '#2f3136', borderRadius: '4px' }}>
+              <h4 style={{ margin: '0 0 10px', color: '#fff', fontSize: '12px', textTransform: 'uppercase' }}>Voice Requests</h4>
+              {joinRequests.map(reqId => {
+                const reqUser = participants.find(p => p.userId === reqId);
+                if (!reqUser) return null;
+                return (
+                  <div key={reqId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
+                    <span style={{ color: '#dcddde' }}>{reqUser.displayName}</span>
+                    <div>
+                      <button onClick={() => admitUser(reqId)} style={{ background: '#3ba55d', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '3px', cursor: 'pointer', marginRight: '5px' }}>✓</button>
+                      <button onClick={() => denyUser(reqId)} style={{ background: '#ed4245', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '3px', cursor: 'pointer' }}>✕</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="left-participants-header" style={{ marginTop: '20px' }}>
+            <span className="left-participants-icon">👥</span>
+            <span className="left-participants-title">Participants</span>
+            <span className="left-participants-count">{otherParticipants.length} online</span>
+          </div>
+
+          {otherParticipants.map((p) => (
             <div key={p.userId} className="left-participant-item">
               <div className={`left-participant-avatar ${p.role === 'host' ? 'is-host' : ''}`}>
                 {p.displayName.charAt(0).toUpperCase()}
@@ -394,17 +479,48 @@ export default function Room() {
 
           <div className="left-your-identity">
             <span className="left-identity-label">Your Identity</span>
-            <div className="left-identity-card">
-              <div className="left-identity-avatar">
+            <div className="left-identity-card" style={{ display: 'flex', alignItems: 'center' }}>
+              <div className="left-identity-avatar" style={{ border: speakingUsers.has(userId) ? '2px solid #3ba55d' : '2px solid transparent', boxShadow: speakingUsers.has(userId) ? '0 0 5px #3ba55d' : 'none', boxSizing: 'border-box' }}>
                 {displayName.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <div className="left-identity-name">{displayName}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="left-identity-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</div>
                 <div className="left-identity-sub">{myRoleLabel}</div>
               </div>
+              
+              {/* Local User Controls */}
+              {currentUser?.voiceStatus === 'joined' && (
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    onClick={toggleMute} 
+                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: currentUser?.micOn ? '#b9bbbe' : '#ed4245', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} 
+                    title="Toggle Mute"
+                  >
+                    {currentUser?.micOn ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.78 4.37a5 5 0 0 1 10.44 0v6.26l-10.44-10.44zm-.78.78 12.85 12.85-1.41 1.41-2.82-2.82c-1.32.74-2.85 1.15-4.62 1.15-4.97 0-9-4.03-9-9h2c0 3.86 3.14 7 7 7 1.3 0 2.52-.35 3.58-.96l-3.58-3.58v2.54h-2v-4.3l-2-2v6.3h2v-2.54l-1.58-1.58A5 5 0 0 1 6 5.15z"/></svg>
+                    )}
+                  </button>
+                  <button 
+                    onClick={toggleDeafen} 
+                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: !currentUser?.deafened ? '#b9bbbe' : '#ed4245', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} 
+                    title="Toggle Deafen"
+                  >
+                    {!currentUser?.deafened ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 0 0-9 9v7c0 1.1.9 2 2 2h4v-8H5v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-4v8h4c1.1 0 2-.9 2-2v-7a9 9 0 0 0-9-9z"/></svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c5.52 0 10 4.48 10 10v4.5c0 1.38-1.12 2.5-2.5 2.5h-1.5v-7h2A8 8 0 0 0 4 12h2v7H4.5C3.12 19 2 17.88 2 16.5V12c0-5.52 4.48-10 10-10zm-1.07 3.52 9.55 9.55-1.42 1.42-9.55-9.55 1.42-1.42z"/></svg>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </aside>
+
+        {/* Hidden Audio Elements */}
+        <AudioStreams audioStreams={audioStreams} localDeafened={currentUser?.deafened} />
 
         {/* ── CENTER: Video + Controls ─────────────────────────────────── */}
         <section className="room-player-section">
