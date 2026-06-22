@@ -171,4 +171,4 @@ Backend  — Test & Build →  Deploy — Render
 ### Client
 | Variable | Description |
 |---|---|
-| `VITE_SERVER_URL` | Backend server URL |
+| `VITE_SERVER_URL` | Backend server URL|
