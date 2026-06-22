@@ -554,6 +554,123 @@ export function registerHandlers(socket) {
     });
   });
 
+  // ─── VOICE & WEBRTC HANDLERS ───────────────────────────────────────────────
+
+  socket.on('voice_request_join', () => {
+    const auth = getAuthorizedParticipant(false, false);
+    if (!auth) return;
+    const { room, participant } = auth;
+
+    if (participant.voiceStatus !== 'joined') {
+      participant.voiceStatus = 'requesting';
+      room.broadcast('participant_updated', { participant: participant.toJSON() });
+      
+      // Notify host specifically
+      for (const p of room.participants.values()) {
+        if (p.role === 'host') {
+          socket.to(p.socketId).emit('voice_join_request', { userId: participant.userId, displayName: participant.displayName });
+        }
+      }
+    }
+  });
+
+  socket.on('voice_admit', ({ targetUserId }) => {
+    const auth = getAuthorizedParticipant(false, true); // host only
+    if (!auth) return;
+    const { room } = auth;
+
+    const target = room.getParticipant(targetUserId);
+    if (target && target.voiceStatus === 'requesting') {
+      target.voiceStatus = 'joined';
+      room.broadcast('participant_updated', { participant: target.toJSON() });
+      socket.to(target.socketId).emit('voice_admitted');
+    }
+  });
+
+  socket.on('voice_deny', ({ targetUserId }) => {
+    const auth = getAuthorizedParticipant(false, true); // host only
+    if (!auth) return;
+    const { room } = auth;
+
+    const target = room.getParticipant(targetUserId);
+    if (target && target.voiceStatus === 'requesting') {
+      target.voiceStatus = 'none';
+      room.broadcast('participant_updated', { participant: target.toJSON() });
+      socket.to(target.socketId).emit('voice_denied');
+    }
+  });
+
+  socket.on('voice_leave', () => {
+    const auth = getAuthorizedParticipant(false, false);
+    if (!auth) return;
+    const { room, participant } = auth;
+
+    participant.voiceStatus = 'none';
+    room.broadcast('participant_updated', { participant: participant.toJSON() });
+  });
+
+  socket.on('audio_status_update', ({ micOn, deafened }) => {
+    const auth = getAuthorizedParticipant(false, false);
+    if (!auth) return;
+    const { room, participant } = auth;
+
+    participant.micOn = !!micOn;
+    participant.deafened = !!deafened;
+    room.broadcast('participant_updated', { participant: participant.toJSON() });
+  });
+
+  socket.on('host_mute_user', ({ targetUserId }) => {
+    const auth = getAuthorizedParticipant(false, true); // host only
+    if (!auth) return;
+    const { room } = auth;
+
+    const target = room.getParticipant(targetUserId);
+    if (target) {
+      target.micOn = false;
+      room.broadcast('participant_updated', { participant: target.toJSON() });
+      socket.to(target.socketId).emit('force_muted');
+    }
+  });
+
+  socket.on('webrtc_offer', ({ targetUserId, offer }) => {
+    if (!socket.userId || !socket.roomCode) return;
+    const room = getRoom(socket.roomCode);
+    if (!room) return;
+    const target = room.getParticipant(targetUserId);
+    if (target) {
+      socket.to(target.socketId).emit('webrtc_offer', {
+        senderId: socket.userId,
+        offer
+      });
+    }
+  });
+
+  socket.on('webrtc_answer', ({ targetUserId, answer }) => {
+    if (!socket.userId || !socket.roomCode) return;
+    const room = getRoom(socket.roomCode);
+    if (!room) return;
+    const target = room.getParticipant(targetUserId);
+    if (target) {
+      socket.to(target.socketId).emit('webrtc_answer', {
+        senderId: socket.userId,
+        answer
+      });
+    }
+  });
+
+  socket.on('webrtc_ice_candidate', ({ targetUserId, candidate }) => {
+    if (!socket.userId || !socket.roomCode) return;
+    const room = getRoom(socket.roomCode);
+    if (!room) return;
+    const target = room.getParticipant(targetUserId);
+    if (target) {
+      socket.to(target.socketId).emit('webrtc_ice_candidate', {
+        senderId: socket.userId,
+        candidate
+      });
+    }
+  });
+
   // ─── request_sync ──────────────────────────────────────────────────────────
   // Payload: (none)
   //

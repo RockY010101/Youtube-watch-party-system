@@ -28,6 +28,11 @@ export class Participant {
     this.displayName = displayName;
     this.role        = role;        // 'host' | 'moderator' | 'participant'
     this.socketId    = socketId;
+
+    // Audio chat properties
+    this.voiceStatus = role === 'host' ? 'joined' : 'none'; // 'none' | 'requesting' | 'joined'
+    this.micOn       = true;
+    this.deafened    = false;
   }
 
   // ─── canControl() ────────────────────────────────────────────────────────────
@@ -63,6 +68,9 @@ export class Participant {
       userId:      this.userId,
       displayName: this.displayName,
       role:        this.role,
+      voiceStatus: this.voiceStatus,
+      micOn:       this.micOn,
+      deafened:    this.deafened,
     };
   }
 }
