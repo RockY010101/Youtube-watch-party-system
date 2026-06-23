@@ -387,8 +387,10 @@ export default function Room() {
             <div 
               className="voice-channel-header" 
               onClick={() => {
-                if (currentUser?.voiceStatus === 'none') requestVoice();
-                else if (currentUser?.voiceStatus === 'joined') leaveVoice();
+                const s = currentUser?.voiceStatus;
+                if (s === 'none') requestVoice();
+                else if (s === 'joined') leaveVoice();
+                else if (s === 'requesting') leaveVoice(); // cancel request
               }}
               style={{ cursor: 'pointer', padding: '10px', display: 'flex', alignItems: 'center', gap: '8px', color: '#43b581', fontWeight: 'bold' }}
             >
@@ -396,6 +398,12 @@ export default function Room() {
                 <path d="M11 2v10.553c-1.332.327-2.332 1.547-2.332 3.018v.429c0 1.657 1.343 3 3 3s3-1.343 3-3v-.429c0-1.471-1-2.691-2.332-3.018v-4.553h3.332v1.895c0 .552.448 1 1 1s1-.448 1-1v-2.895c0-.552-.448-1-1-1h-5.668z"/>
               </svg>
               Lounge
+              {currentUser?.voiceStatus === 'requesting' && (
+                <span style={{ marginLeft: 'auto', fontSize: '0.75em', color: '#faa81a', fontWeight: 'normal' }}>Waiting…</span>
+              )}
+              {currentUser?.voiceStatus === 'joined' && (
+                <span style={{ marginLeft: 'auto', fontSize: '0.75em', color: '#72767d', fontWeight: 'normal' }}>Leave</span>
+              )}
             </div>
 
             {/* Render Voice Participants */}

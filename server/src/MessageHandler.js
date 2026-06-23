@@ -561,7 +561,19 @@ export function registerHandlers(socket) {
     if (!auth) return;
     const { room, participant } = auth;
 
-    if (participant.voiceStatus !== 'joined') {
+    if (participant.voiceStatus === 'joined') return;
+
+    // Host can always join instantly without needing approval
+    if (participant.role === 'host') {
+      participant.voiceStatus = 'joined';
+      participant.micOn = true;
+      room.broadcast('participant_updated', { participant: participant.toJSON() });
+      socket.emit('voice_admitted');
+      return;
+    }
+
+    // Regular participants: set to requesting and notify host
+    if (participant.voiceStatus !== 'requesting') {
       participant.voiceStatus = 'requesting';
       room.broadcast('participant_updated', { participant: participant.toJSON() });
       
